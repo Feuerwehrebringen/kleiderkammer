@@ -143,8 +143,8 @@
               <label class="form-label">Artikel aus dem Katalog</label>
               <select id="ausKatalogArtikel" class="form-select mb-1" onchange="katalogHinweis('ausKatalogArtikel','ausHinweis')"></select>
               <div id="ausHinweis" class="form-text mb-2"></div>
-              <label class="form-label">Größe</label>
-              <input id="ausGroesse" class="form-control mb-3" placeholder="z. B. 52, XL, 42 L">
+              <label class="form-label">Größe <span class="text-muted fw-normal">(optional)</span></label>
+              <input id="ausGroesse" class="form-control mb-3" placeholder="optional, z. B. 52, XL, 42 L">
             </div>
             <div class="d-flex align-items-end gap-3 flex-wrap">
               <div>
@@ -398,7 +398,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyjtzFDUxp7gyA-PtWVFx1U
  * ============================================================ */
 const S = {
   pin: '',
-  kameraden: [], katalog: [], lieferanten: [], lager: [],
+  kameraden: [], weitere: [], katalog: [], lieferanten: [], lager: [],
   standardMindest: 1,
   korb: { intern: [], extern: [] },
   rueck: { person: null, besitz: [], extra: [] },
@@ -460,7 +460,7 @@ function sperren() {
 function laden() {
   call('init', {}, 'Lade Daten …').then(d => {
     document.getElementById('pinScreen').style.display = 'none';
-    S.kameraden = d.kameraden; S.katalog = d.katalog; S.lieferanten = d.lieferanten;
+    S.kameraden = d.kameraden; S.weitere = d.weiterePersonen || []; S.katalog = d.katalog; S.lieferanten = d.lieferanten;
     S.lager = d.lager; S.standardMindest = d.standardMindest;
     alleRendern();
   });
@@ -584,9 +584,7 @@ function zeigeTab(name) {
 }
 
 function alleRendern() {
-  personPicker('ausPerson', 'aus', true);
-  personPicker('rueckPerson', 'rue', true, rueckPersonGewaehlt);
-  personPicker('persPerson', 'pers', false, personLaden);
+  Object.keys(PICKER).forEach(p => personPicker(p));
   $('ausLieferant').innerHTML = S.lieferanten.map(l => '<option>' + esc(l.name) + '</option>').join('');
   lieferantInfo();
   katalogGeaendert();
@@ -608,13 +606,34 @@ function lagerGeaendert() {
 /* ============================================================
  *  PERSONENAUSWAHL (wird in 3 Reitern genutzt)
  * ============================================================ */
-function personPicker(containerId, prefix, mitManuell, onChange) {
+const PICKER = {
+  aus:  { container: 'ausPerson',   manuell: true,  onChange: null },
+  rue:  { container: 'rueckPerson', manuell: true,  onChange: () => rueckPersonGewaehlt() },
+  pers: { container: 'persPerson',  manuell: false, onChange: () => personLaden() }
+};
+
+/** "Max Muster" → "Muster, Max" */
+function nameUmdrehen(name) {
+  const t = String(name).trim().split(/\s+/);
+  if (t.length < 2) return name;
+  const nach = t.pop();
+  return nach + ', ' + t.join(' ');
+}
+
+function personPicker(prefix) {
+  const cfg = PICKER[prefix];
+  const containerId = cfg.container, mitManuell = cfg.manuell, onChange = cfg.onChange;
   // Kameraden kommen vom Server bereits nach Nachname sortiert
-  let opts = '<option value="">– Person wählen –</option>';
+  let opts = '<option value="">– Person wählen –</option><optgroup label="Kameraden">';
   S.kameraden.forEach((k, i) => {
     const anzeige = k.nachname && k.vorname ? k.nachname + ', ' + k.vorname : (k.nachname || k.vorname);
     opts += '<option value="' + i + '">' + esc(anzeige) + (k.abteilung ? ' (' + esc(k.abteilung) + ')' : '') + '</option>';
   });
+  opts += '</optgroup>';
+  if (S.weitere.length) {
+    opts += '<optgroup label="Weitere Personen (manuell erfasst)">' +
+      S.weitere.map((w, i) => '<option value="w' + i + '">' + esc(nameUmdrehen(w.name)) + '</option>').join('') + '</optgroup>';
+  }
   if (mitManuell) opts += '<option value="' + MANUELL + '">✎ Andere Person eingeben …</option>';
 
   $(containerId).innerHTML =
@@ -652,8 +671,37 @@ function lesePerson(prefix) {
     const name = vorname + ' ' + nachname;
     return { name: name, email: $(prefix + 'Email').value.trim() };
   }
+  if (v && v[0] === 'w') {
+    const w = S.weitere[v.slice(1)];
+    return w ? { name: w.name, email: w.email || '' } : null;
+  }
   const k = S.kameraden[v];
   return k ? { name: k.name, email: k.email || k.tempEmail || '' } : null;
+}
+
+/** Nach einem Vorgang mit manuell eingegebener Person diese in "Weitere Personen" aufnehmen. */
+function weiterePersonMerken(person) {
+  if (!person || !person.name) return;
+  const n = person.name.trim().toLowerCase();
+  const m = (person.email || '').trim().toLowerCase();
+  if (S.kameraden.some(k => k.name.toLowerCase() === n || (m && (k.email || '').toLowerCase() === m))) return;
+  const w = S.weitere.find(x => x.name.trim().toLowerCase() === n);
+  if (w) { if (person.email) w.email = person.email; return; }
+  S.weitere.push({ name: person.name.trim(), email: person.email || '' });
+  const nach = x => x.name.trim().split(/\s+/).pop();
+  S.weitere.sort((a, b) => nach(a).localeCompare(nach(b), 'de', { sensitivity: 'base' }));
+  // Auswahllisten neu aufbauen, aktuelle Auswahl nach Möglichkeit behalten
+  Object.keys(PICKER).forEach(p => {
+    const alt = lesePerson(p);
+    const altWert = $(p + 'Wahl').value;
+    personPicker(p);
+    if (altWert === '' || altWert === MANUELL || altWert[0] !== 'w') { $(p + 'Wahl').value = altWert === MANUELL ? '' : altWert; }
+    else if (alt) {
+      const idx = S.weitere.findIndex(x => x.name === alt.name);
+      if (idx >= 0) $(p + 'Wahl').value = 'w' + idx;
+    }
+    mailHinweis(p);
+  });
 }
 
 function personZuruecksetzen(prefix) {
@@ -726,7 +774,6 @@ function inWarenkorb() {
     const a = S.katalog[$('ausKatalogArtikel').value];
     const gr = $('ausGroesse').value.trim();
     if (!a) return fehler('Bitte einen Artikel aus dem Katalog wählen.');
-    if (!gr) return fehler('Bitte eine Größe angeben.');
     S.korb.extern.push({ kategorie: a.kategorie, artikel: a.artikel, groesse: gr, menge: menge });
     $('ausKatalogArtikel').value = ''; $('ausGroesse').value = ''; $('ausHinweis').textContent = '';
   }
@@ -744,8 +791,8 @@ function korbRendern() {
   const korb = S.korb[modus()];
   $('korbAnzahl').textContent = korb.reduce((s, p) => s + p.menge, 0) + ' Stk.';
   $('warenkorb').innerHTML = korb.length ? korb.map((p, i) =>
-    '<div class="korb-pos"><div class="titel"><div>' + esc(p.artikel) + '</div><small class="text-muted">Größe ' +
-    esc(p.groesse) + '</small></div><span class="badge bg-dark fs-6">' + p.menge + '×</span>' +
+    '<div class="korb-pos"><div class="titel"><div>' + esc(p.artikel) + '</div><small class="text-muted">' +
+    (p.groesse ? 'Größe ' + esc(p.groesse) : 'ohne Größenangabe') + '</small></div><span class="badge bg-dark fs-6">' + p.menge + '×</span>' +
     '<button class="btn btn-outline-danger btn-sm" style="min-height:40px;width:44px" onclick="ausKorbEntfernen(' + i + ')">✕</button></div>'
   ).join('') : '<div class="korb-leer">Warenkorb ist leer.</div>';
   $('btnAusgabe').disabled = !korb.length;
@@ -766,6 +813,7 @@ function ausgabeAbsenden() {
   call('ausgabe', daten, 'Erstelle Beleg und sende E-Mail …').then(res => {
     S.lager = res.lager;
     S.korb[m] = [];
+    weiterePersonMerken(person);
     $('ausBemerkung').value = '';
     personZuruecksetzen('aus');
     lagerGeaendert();
@@ -832,8 +880,8 @@ function rueckRendern() {
   if (r.besitz.length) {
     h += '<p class="text-muted mb-1">Laut App im Besitz von ' + esc(r.person.name) + ' – Menge der Rückgabe einstellen:</p>';
     r.besitz.forEach((b, i) => {
-      h += '<div class="korb-pos flex-wrap"><div class="titel"><div>' + esc(b.artikel) + '</div><small class="text-muted">Gr. ' +
-        esc(b.groesse) + ' · ausgegeben: ' + b.menge + '</small></div>' +
+      h += '<div class="korb-pos flex-wrap"><div class="titel"><div>' + esc(b.artikel) + '</div><small class="text-muted">' +
+        (b.groesse ? 'Gr. ' + esc(b.groesse) + ' · ' : '') + 'ausgegeben: ' + b.menge + '</small></div>' +
         stepper('rb' + i, b.rueck, 0, b.menge) +
         '<select class="form-select" style="width:auto" onchange="S.rueck.besitz[' + i + '].zustand=this.value">' +
         '<option value="lager"' + (b.zustand === 'lager' ? ' selected' : '') + '>ins Lager</option>' +
@@ -875,6 +923,7 @@ function rueckgabeAbsenden() {
   const daten = { person: lesePerson('rue') || S.rueck.person, positionen: rueckPositionen(), bemerkung: $('rueckBemerkung').value.trim() };
   call('rueckgabe', daten, 'Buche Rückgabe …').then(res => {
     S.lager = res.lager;
+    weiterePersonMerken(daten.person);
     S.rueck = { person: null, besitz: [], extra: [] };
     $('rueckBemerkung').value = '';
     personZuruecksetzen('rue');
@@ -996,7 +1045,7 @@ function personLaden() {
     let h = '<div class="row"><div class="col-lg-5"><div class="card"><div class="card-header">Aktuell im Besitz</div><div class="card-body p-0">';
     h += res.besitz.length
       ? '<table class="table m-0"><thead><tr><th>Artikel</th><th>Größe</th><th class="text-end">Menge</th></tr></thead><tbody>' +
-        res.besitz.map(b => '<tr><td>' + esc(b.artikel) + '</td><td>' + esc(b.groesse) + '</td><td class="text-end fw-bold">' + b.menge + '</td></tr>').join('') +
+        res.besitz.map(b => '<tr><td>' + esc(b.artikel) + '</td><td>' + (esc(b.groesse) || '–') + '</td><td class="text-end fw-bold">' + b.menge + '</td></tr>').join('') +
         '</tbody></table>'
       : '<div class="korb-leer">Keine Ausrüstung erfasst.</div>';
     h += '</div></div></div><div class="col-lg-7"><div class="card"><div class="card-header">Verlauf</div><div class="card-body p-0 tabelle-wrap">';
@@ -1005,7 +1054,7 @@ function personLaden() {
         res.verlauf.map(v => {
           const farbe = v.typ === 'Rückgabe' ? 'success' : (v.typ === 'Abholschein' ? 'danger' : 'dark');
           return '<tr><td class="text-nowrap">' + esc(v.datum) + '</td><td><span class="badge bg-' + farbe + '">' + esc(v.typ) +
-            '</span><br><small class="text-muted">' + esc(v.nr) + '</small></td><td>' + esc(v.artikel) + ' · Gr. ' + esc(v.groesse) +
+            '</span><br><small class="text-muted">' + esc(v.nr) + '</small></td><td>' + esc(v.artikel) + (v.groesse ? ' · Gr. ' + esc(v.groesse) : '') +
             (v.info ? '<br><small class="text-muted">' + esc(v.info) + '</small>' : '') + '</td><td class="text-end">' + v.menge +
             '</td><td>' + (v.pdf ? '<a class="btn btn-sm btn-outline-dark" style="min-height:36px" target="_blank" href="' + esc(v.pdf) + '">PDF</a>' : '') + '</td></tr>';
         }).join('') + '</tbody></table>'
@@ -1024,6 +1073,12 @@ function mailHinweis(prefix) {
   const sel = $(prefix + 'Wahl');
   const k = S.kameraden[sel.value];
   const el = $(prefix + 'Mail');
+  if (sel.value && sel.value[0] === 'w') {
+    const w = S.weitere[sel.value.slice(1)];
+    el.innerHTML = w && w.email ? '✉ ' + esc(w.email)
+      : '<span class="text-danger">Keine E-Mail bekannt – Beleg geht nur an die Datenpflege.</span>';
+    return;
+  }
   if (!k) { el.innerHTML = ''; return; }
   if (k.email) { el.textContent = '✉ ' + k.email; return; }
   if (k.tempEmail) {
