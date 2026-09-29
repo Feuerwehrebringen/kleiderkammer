@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Kleiderkammer Ebringen</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --ff-rot: #b91c1c;
+      --ff-rot-dunkel: #7f1d1d;
+      --ff-dunkel: #1f2937;
+      --ff-grau: #f3f4f6;
+    }
+    body { background: var(--ff-grau); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 17px; }
+    .kopf { background: var(--ff-dunkel); color: #fff; padding: 12px 20px; position: sticky; top: 0; z-index: 1020; }
+    .kopf img { height: 52px; background: #fff; border-radius: 8px; padding: 6px 10px; margin-right: 16px; }
+    @media (max-width: 576px) { .kopf { padding: 10px 12px; } .kopf img { height: 34px; padding: 4px 6px; margin-right: 10px; } .kopf h1 { font-size: 1rem !important; } }
+    .kopf h1 { font-size: 1.35rem; margin: 0; font-weight: 700; }
+    .kopf small { color: #cbd5e1; }
+    .reiter { background: #fff; border-bottom: 1px solid #e5e7eb; position: sticky; top: 72px; z-index: 1010; overflow-x: auto; white-space: nowrap; }
+    .reiter .nav-link { color: #374151; font-weight: 600; padding: 14px 20px; border-radius: 0; border-bottom: 3px solid transparent; }
+    .reiter .nav-link.active { color: var(--ff-rot); border-bottom-color: var(--ff-rot); background: none; }
+    .card { border: none; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-bottom: 20px; }
+    .card-header { background: #fff; font-weight: 700; border-bottom: 1px solid #eef0f3; padding: 14px 18px; border-radius: 12px 12px 0 0 !important; }
+    .form-label { font-weight: 600; margin-bottom: 4px; }
+    .form-control, .form-select { min-height: 48px; font-size: 17px; }
+    .btn { min-height: 48px; font-weight: 600; }
+    .btn-ff { background: var(--ff-rot); color: #fff; }
+    .btn-ff:hover, .btn-ff:focus { background: var(--ff-rot-dunkel); color: #fff; }
+    .btn-ff:disabled { background: #9ca3af; color: #fff; }
+    .modus .btn { padding: 12px; }
+    .stepper { display: inline-flex; align-items: stretch; }
+    .stepper button { width: 48px; font-size: 22px; line-height: 1; padding: 0; }
+    .stepper input { width: 64px; text-align: center; border-radius: 0; }
+    .stepper button:first-child { border-radius: 8px 0 0 8px; }
+    .stepper button:last-child { border-radius: 0 8px 8px 0; }
+    .korb-pos { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #eef0f3; }
+    .korb-pos:last-child { border-bottom: none; }
+    .korb-pos .titel { flex: 1; min-width: 0; }
+    .korb-pos .titel div { font-weight: 600; }
+    .korb-leer { color: #6b7280; text-align: center; padding: 30px 10px; }
+    .info-box { background: #fff7ed; border-left: 4px solid #ea580c; padding: 10px 14px; border-radius: 6px; white-space: pre-line; font-size: 15px; }
+    .tabelle-wrap { max-height: 65vh; overflow: auto; }
+    .table thead th { position: sticky; top: 0; background: var(--ff-dunkel); color: #fff; z-index: 1; }
+    .table td, .table th { vertical-align: middle; }
+    tr.knapp td { background: #fee2e2 !important; }
+    tr.leer td { background: #fecaca !important; color: #7f1d1d; }
+    .klickbar { cursor: pointer; }
+    .kennzahl { background: #fff; border-radius: 12px; padding: 14px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .kennzahl b { font-size: 1.6rem; display: block; }
+    #pinScreen { position: fixed; inset: 0; background: var(--ff-dunkel); z-index: 2000; display: none; align-items: center; justify-content: center; }
+    #pinScreen .box { background: #fff; border-radius: 16px; padding: 30px; width: min(380px, 92vw); text-align: center; }
+    #pinInput { font-size: 28px; text-align: center; letter-spacing: 8px; }
+    #busy { position: fixed; inset: 0; background: rgba(255,255,255,.7); z-index: 3000; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 14px; font-weight: 600; }
+    .toast-container { z-index: 3100; }
+    @media (max-width: 576px) { .kopf small { display: none; } body { font-size: 16px; } }
+  </style>
+</head>
+<body>
+
+<!-- PIN -->
+<div id="pinScreen">
+  <form class="box" onsubmit="pinAbsenden(event)">
+    <h4 class="mb-3">Kleiderkammer Ebringen</h4>
+    <p class="text-muted">Bitte PIN eingeben</p>
+    <input id="pinInput" type="password" inputmode="numeric" autocomplete="off" class="form-control mb-3" required>
+    <div class="form-check text-start mb-3">
+      <input class="form-check-input" type="checkbox" id="pinMerken">
+      <label class="form-check-label" for="pinMerken">Auf diesem Gerät merken</label>
+    </div>
+    <div id="pinFehler" class="text-danger mb-2" style="display:none"></div>
+    <button class="btn btn-ff w-100">Entsperren</button>
+  </form>
+</div>
+
+<!-- Ladeanzeige -->
+<div id="busy"><div class="spinner-border text-danger" style="width:3rem;height:3rem"></div><div id="busyText">Bitte warten …</div></div>
+
+<!-- Kopf -->
+<div class="kopf d-flex align-items-center justify-content-between">
+  <div class="d-flex align-items-center">
+    <img src="logo.png" alt="Freiwillige Feuerwehr Ebringen">
+    <div>
+      <h1>Kleiderkammer Ebringen</h1>
+      <small>Ausgabe · Rückgabe · Lager</small>
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn btn-outline-light" onclick="neuLaden()" title="Daten neu laden">⟳</button>
+    <button class="btn btn-outline-light" id="btnSperren" onclick="sperren()" title="Sperren" style="display:none">🔒</button>
+  </div>
+</div>
+
+<!-- Reiter -->
+<div class="reiter">
+  <ul class="nav flex-nowrap container-fluid" style="max-width:1400px">
+    <li class="nav-item"><a class="nav-link active" href="#" data-tab="ausgabe">Ausgabe</a></li>
+    <li class="nav-item"><a class="nav-link" href="#" data-tab="rueckgabe">Rückgabe</a></li>
+    <li class="nav-item"><a class="nav-link" href="#" data-tab="einbuchen">Einbuchen</a></li>
+    <li class="nav-item"><a class="nav-link" href="#" data-tab="lager">Lager <span id="knappBadge" class="badge bg-danger" style="display:none"></span></a></li>
+    <li class="nav-item"><a class="nav-link" href="#" data-tab="personen">Personen</a></li>
+    <li class="nav-item"><a class="nav-link" href="#" data-tab="katalog">Katalog</a></li>
+  </ul>
+</div>
+
+<div class="container-fluid py-4" style="max-width:1400px">
+
+  <!-- ===================== AUSGABE ===================== -->
+  <section id="tab-ausgabe" class="tab">
+    <div class="row">
+      <div class="col-lg-6">
+        <div class="card">
+          <div class="card-header">1. Art & Empfänger</div>
+          <div class="card-body">
+            <div class="btn-group w-100 modus mb-3">
+              <input type="radio" class="btn-check" name="modus" id="modIntern" value="intern" checked onchange="modusWechsel()">
+              <label class="btn btn-outline-dark" for="modIntern">Ausgabe aus eigener Kammer</label>
+              <input type="radio" class="btn-check" name="modus" id="modExtern" value="extern" onchange="modusWechsel()">
+              <label class="btn btn-outline-danger" for="modExtern">Externer Abholschein</label>
+            </div>
+
+            <div id="blockLieferant" class="mb-3" style="display:none">
+              <label class="form-label">Abholfirma</label>
+              <select id="ausLieferant" class="form-select" onchange="lieferantInfo()"></select>
+              <div id="lieferantInfo" class="info-box mt-2" style="display:none"></div>
+            </div>
+
+            <div id="ausPerson"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">2. Artikel hinzufügen</div>
+          <div class="card-body">
+            <div id="addIntern">
+              <label class="form-label">Artikel aus dem Lager</label>
+              <select id="ausLagerArtikel" class="form-select mb-3"></select>
+            </div>
+            <div id="addExtern" style="display:none">
+              <label class="form-label">Artikel aus dem Katalog</label>
+              <select id="ausKatalogArtikel" class="form-select mb-1" onchange="katalogHinweis('ausKatalogArtikel','ausHinweis')"></select>
+              <div id="ausHinweis" class="form-text mb-2"></div>
+              <label class="form-label">Größe</label>
+              <input id="ausGroesse" class="form-control mb-3" placeholder="z. B. 52, XL, 42 L">
+            </div>
+            <div class="d-flex align-items-end gap-3 flex-wrap">
+              <div>
+                <label class="form-label d-block">Menge</label>
+                <div id="ausMengeWrap"></div>
+              </div>
+              <button class="btn btn-dark flex-grow-1" onclick="inWarenkorb()">+ In den Warenkorb</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>3. Warenkorb</span>
+            <span id="korbAnzahl" class="badge bg-secondary">0</span>
+          </div>
+          <div class="card-body">
+            <div id="warenkorb"></div>
+            <label class="form-label mt-3">Bemerkung (optional)</label>
+            <textarea id="ausBemerkung" class="form-control mb-3" rows="2"></textarea>
+            <button id="btnAusgabe" class="btn btn-ff btn-lg w-100" onclick="ausgabeAbsenden()" disabled>Beleg erstellen & senden</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== RÜCKGABE ===================== -->
+  <section id="tab-rueckgabe" class="tab" style="display:none">
+    <div class="row">
+      <div class="col-lg-5">
+        <div class="card">
+          <div class="card-header">1. Wer gibt zurück?</div>
+          <div class="card-body"><div id="rueckPerson"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header">Weiteren Artikel zurücknehmen</div>
+          <div class="card-body">
+            <p class="form-text mt-0">Für Artikel, die nicht in der Liste rechts stehen (z. B. vor Einführung der App ausgegeben).</p>
+            <select id="rueckKatalog" class="form-select mb-2"></select>
+            <input id="rueckGroesse" class="form-control mb-2" placeholder="Größe">
+            <select id="rueckZustandNeu" class="form-select mb-3">
+              <option value="lager">Zurück ins Lager</option>
+              <option value="aussondern">Aussondern (defekt/verschlissen)</option>
+            </select>
+            <div class="d-flex align-items-end gap-3 flex-wrap">
+              <div id="rueckMengeWrap"></div>
+              <button class="btn btn-dark flex-grow-1" onclick="rueckExtra()">+ Hinzufügen</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-7">
+        <div class="card">
+          <div class="card-header">2. Zurückgegebene Artikel</div>
+          <div class="card-body">
+            <div id="rueckListe"><div class="korb-leer">Bitte zuerst eine Person auswählen.</div></div>
+            <label class="form-label mt-3">Bemerkung (optional)</label>
+            <textarea id="rueckBemerkung" class="form-control mb-3" rows="2"></textarea>
+            <button id="btnRueckgabe" class="btn btn-ff btn-lg w-100" onclick="rueckgabeAbsenden()" disabled>Rückgabe buchen & Beleg senden</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== EINBUCHEN ===================== -->
+  <section id="tab-einbuchen" class="tab" style="display:none">
+    <div class="row">
+      <div class="col-lg-6">
+        <div class="card">
+          <div class="card-header">Material in die eigene Kammer einbuchen</div>
+          <div class="card-body">
+            <label class="form-label">Kategorie</label>
+            <select id="einKat" class="form-select mb-3" onchange="einArtikelFuellen()"></select>
+            <label class="form-label">Artikel</label>
+            <select id="einArtikel" class="form-select mb-1" onchange="einGroessenFuellen(); katalogHinweis('einArtikel','einHinweis')"></select>
+            <div id="einHinweis" class="form-text mb-1"></div>
+            <div class="form-text mb-2"><a href="#" onclick="zeigeTab('katalog');return false">Artikel fehlt? Im Katalog anlegen →</a></div>
+            <label class="form-label">Größe</label>
+            <input id="einGroesse" class="form-control mb-1" list="einGroessenListe" placeholder="z. B. 52, XL" oninput="einStatus()">
+            <datalist id="einGroessenListe"></datalist>
+            <div id="einStatus" class="form-text mb-3"></div>
+            <div class="row g-3 mb-3">
+              <div class="col-auto">
+                <label class="form-label d-block">Menge (Zugang)</label>
+                <div id="einMengeWrap"></div>
+              </div>
+              <div class="col" id="einMindestBlock">
+                <label class="form-label">Mindestbestand</label>
+                <input id="einMindest" type="number" min="0" class="form-control">
+                <div class="form-text">Nur bei neuen Artikeln</div>
+              </div>
+            </div>
+            <button class="btn btn-ff btn-lg w-100" onclick="einbuchenAbsenden()">Einbuchen</button>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card">
+          <div class="card-header">In dieser Sitzung eingebucht</div>
+          <div class="card-body" id="einProtokoll"><div class="korb-leer">Noch nichts eingebucht.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== LAGER ===================== -->
+  <section id="tab-lager" class="tab" style="display:none">
+    <div class="row g-3 mb-3" id="kennzahlen"></div>
+    <div class="card">
+      <div class="card-header">
+        <div class="row g-2 align-items-center">
+          <div class="col-md-5"><input id="lagerSuche" class="form-control" placeholder="Suchen …" oninput="lagerRendern()"></div>
+          <div class="col-md-4"><select id="lagerKat" class="form-select" onchange="lagerRendern()"></select></div>
+          <div class="col-md-3">
+            <div class="form-check form-switch ms-1">
+              <input class="form-check-input" type="checkbox" id="lagerNurKnapp" onchange="lagerRendern()">
+              <label class="form-check-label" for="lagerNurKnapp">Nur knappe Artikel</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body p-0 tabelle-wrap">
+        <table class="table table-hover m-0">
+          <thead><tr><th>ID</th><th>Kategorie</th><th>Artikel</th><th>Größe</th><th class="text-end">Bestand</th><th class="text-end">Min.</th></tr></thead>
+          <tbody id="lagerBody"></tbody>
+        </table>
+      </div>
+      <div class="card-footer bg-white text-muted small">Tipp: Auf eine Zeile tippen, um Bestand (Inventur) oder Mindestbestand zu ändern.</div>
+    </div>
+  </section>
+
+  <!-- ===================== PERSONEN ===================== -->
+  <section id="tab-personen" class="tab" style="display:none">
+    <div class="card">
+      <div class="card-body"><div id="persPerson"></div></div>
+    </div>
+    <div id="persErgebnis"></div>
+  </section>
+
+  <!-- ===================== KATALOG ===================== -->
+  <section id="tab-katalog" class="tab" style="display:none">
+    <div class="row">
+      <div class="col-lg-5">
+        <div class="card">
+          <div class="card-header">Neuen Artikel in den Katalog aufnehmen</div>
+          <div class="card-body">
+            <label class="form-label">Kategorie</label>
+            <select id="katKat" class="form-select mb-2" onchange="katNeueKategorie()"></select>
+            <input id="katKatNeu" class="form-control mb-2" placeholder="Name der neuen Kategorie" style="display:none">
+            <label class="form-label mt-1">Artikelbezeichnung</label>
+            <input id="katArtikel" class="form-control mb-3" placeholder="z. B. Feuerwehr Softshelljacke">
+            <label class="form-label">Hinweis (optional)</label>
+            <input id="katHinweis" class="form-control mb-3" placeholder="z. B. Größe mit Arm L/K angeben">
+            <button class="btn btn-ff btn-lg w-100" onclick="katalogNeuAbsenden()">In Katalog aufnehmen</button>
+            <p class="form-text mt-3 mb-0">Der Artikel steht danach sofort bei Einbuchen, Abholschein und Rückgabe zur Auswahl.
+              Umbenennen geht im Blatt „Katalog“ im Google Sheet.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-7">
+        <div class="card">
+          <div class="card-header">
+            <input id="katSuche" class="form-control" placeholder="Katalog durchsuchen …" oninput="katalogRendern()">
+          </div>
+          <div class="card-body p-0 tabelle-wrap">
+            <table class="table m-0">
+              <thead><tr><th>Kategorie</th><th>Artikel</th><th class="text-end">Aktiv</th></tr></thead>
+              <tbody id="katBody"></tbody>
+            </table>
+          </div>
+          <div class="card-footer bg-white text-muted small">Deaktivierte Artikel werden nicht mehr zur Auswahl angeboten. Lagerbestand und Verlauf bleiben erhalten.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Modal: E-Mail nachtragen -->
+<div class="modal fade" id="mailModal" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" onsubmit="mailUebernehmen(event)">
+      <div class="modal-header"><h5 class="modal-title">Keine E-Mail hinterlegt</h5></div>
+      <div class="modal-body">
+        <p>Für <b id="mailPersonName"></b> ist keine E-Mail-Adresse hinterlegt. Bitte hier eintragen, damit der Beleg per Mail verschickt wird:</p>
+        <input id="mailInput" type="email" class="form-control mb-3" placeholder="name@beispiel.de" autocomplete="off">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="mailSpeichern" checked>
+          <label class="form-check-label" for="mailSpeichern">Dauerhaft in der Kameradenliste speichern</label>
+        </div>
+      </div>
+      <div class="modal-footer d-flex">
+        <button type="button" class="btn btn-outline-secondary flex-fill" onclick="mailOhne()">Ohne E-Mail weiter</button>
+        <button class="btn btn-ff flex-fill">Übernehmen</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Ergebnis -->
+<div class="modal fade" id="ergebnisModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title" id="ergebnisTitel"></h5></div>
+      <div class="modal-body" id="ergebnisBody"></div>
+      <div class="modal-footer"><button class="btn btn-ff w-100" data-bs-dismiss="modal">OK</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Lagerkorrektur -->
+<div class="modal fade" id="korrModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" onsubmit="korrekturAbsenden(event)">
+      <div class="modal-header">
+        <h5 class="modal-title" id="korrTitel"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="korrId">
+        <div class="row g-3">
+          <div class="col-6"><label class="form-label">Bestand</label><input id="korrBestand" type="number" min="0" class="form-control" required></div>
+          <div class="col-6"><label class="form-label">Mindestbestand</label><input id="korrMindest" type="number" min="0" class="form-control" required></div>
+          <div class="col-12"><label class="form-label">Grund</label>
+            <select id="korrGrund" class="form-select">
+              <option>Inventur</option><option>Beschädigt / ausgesondert</option><option>Fehlbuchung korrigiert</option><option>Sonstiges</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-ff w-100">Speichern</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ============================================================
+ *  KONFIGURATION – hier die Web-App-URL aus Apps Script eintragen
+ *  (Bereitstellen → Bereitstellungen verwalten → Web-App-URL, endet auf /exec)
+ * ============================================================ */
+const API_URL = 'https://script.google.com/macros/s/AKfycbyjtzFDUxp7gyA-PtWVFx1UR3W0tKKQKwmR3VEqhuQQpHwY6bCf1CdpuEdhdMB6D4clRQ/exec';
+
+/* ============================================================
+ *  ZUSTAND
+ * ============================================================ */
+const S = {
+  pin: '',
+  kameraden: [], katalog: [], lieferanten: [], lager: [],
+  standardMindest: 1,
+  korb: { intern: [], extern: [] },
+  rueck: { person: null, besitz: [], extra: [] },
+  einProtokoll: []
+};
+const MANUELL = '__manuell';
+window.addEventListener('unhandledrejection', ev => ev.preventDefault());
+
+/* ============================================================
+ *  START & PIN
+ * ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[data-tab]').forEach(a => a.addEventListener('click', ev => {
+    ev.preventDefault(); zeigeTab(a.dataset.tab);
+  }));
+  document.getElementById('ausMengeWrap').innerHTML = stepper('ausMenge');
+  document.getElementById('rueckMengeWrap').innerHTML = stepper('rueckMenge');
+  document.getElementById('einMengeWrap').innerHTML = stepper('einMenge');
+
+  try { S.pin = localStorage.getItem('kk_pin') || ''; } catch (e) {}
+
+  if (API_URL.indexOf('https://script.google.com/') !== 0) {
+    return fehler('API_URL ist in der index.html noch nicht eingetragen.');
+  }
+  busy(true, 'Verbinde …');
+  anfrage({ aktion: 'pinErforderlich' })
+    .then(noetig => {
+      busy(false);
+      if (noetig) document.getElementById('btnSperren').style.display = '';
+      if (noetig && !S.pin) zeigePin(); else laden();
+    })
+    .catch(err => { busy(false); fehler(err); });
+});
+
+function zeigePin(meldung) {
+  document.getElementById('pinScreen').style.display = 'flex';
+  const f = document.getElementById('pinFehler');
+  f.style.display = meldung ? '' : 'none';
+  f.textContent = meldung || '';
+  const i = document.getElementById('pinInput');
+  i.value = ''; setTimeout(() => i.focus(), 50);
+}
+
+function pinAbsenden(ev) {
+  ev.preventDefault();
+  S.pin = document.getElementById('pinInput').value.trim();
+  if (document.getElementById('pinMerken').checked) {
+    try { localStorage.setItem('kk_pin', S.pin); } catch (e) {}
+  }
+  laden();
+}
+
+function sperren() {
+  S.pin = '';
+  try { localStorage.removeItem('kk_pin'); } catch (e) {}
+  zeigePin();
+}
+
+function laden() {
+  call('init', {}, 'Lade Daten …').then(d => {
+    document.getElementById('pinScreen').style.display = 'none';
+    S.kameraden = d.kameraden; S.katalog = d.katalog; S.lieferanten = d.lieferanten;
+    S.lager = d.lager; S.standardMindest = d.standardMindest;
+    alleRendern();
+  });
+}
+
+function neuLaden() { laden(); }
+
+/* ============================================================
+ *  SERVER-AUFRUF
+ * ============================================================ */
+/**
+ * Schickt eine Anfrage an das Apps-Script-Backend.
+ * Content-Type text/plain vermeidet den CORS-Preflight, den Apps Script nicht beantwortet.
+ */
+function anfrage(body) {
+  return fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(body),
+    redirect: 'follow'
+  })
+    .catch(() => { throw new Error('Keine Verbindung zum Server. Bitte Internetverbindung prüfen.'); })
+    .then(r => {
+      if (!r.ok) throw new Error('Serverfehler (' + r.status + ').');
+      return r.json().catch(() => { throw new Error('Ungültige Antwort vom Server – ist die Web-App für „Jeder“ freigegeben?'); });
+    })
+    .then(res => {
+      if (!res.ok) throw new Error(res.fehler || 'Unbekannter Fehler');
+      return res.daten;
+    });
+}
+
+function call(aktion, daten, text) {
+  busy(true, text);
+  return anfrage({ aktion: aktion, pin: S.pin, daten: daten || {} })
+    .then(res => { busy(false); return res; })
+    .catch(err => {
+      busy(false);
+      const msg = (err && err.message) || String(err);
+      if (msg.indexOf('PIN_FALSCH') >= 0) {
+        try { localStorage.removeItem('kk_pin'); } catch (e) {}
+        zeigePin('Falsche PIN.');
+      } else if (msg.indexOf('Zu viele falsche') >= 0) {
+        zeigePin(msg);
+      } else {
+        fehler(msg);
+      }
+      throw err;
+    });
+}
+
+function busy(an, text) {
+  document.getElementById('busy').style.display = an ? 'flex' : 'none';
+  document.getElementById('busyText').textContent = text || 'Bitte warten …';
+}
+
+/* ============================================================
+ *  ALLGEMEINE HELFER
+ * ============================================================ */
+function esc(s) {
+  return String(s === null || s === undefined ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function $(id) { return document.getElementById(id); }
+
+function toast(text, art) {
+  const el = document.createElement('div');
+  el.className = 'toast align-items-center text-bg-' + (art || 'success') + ' border-0';
+  el.innerHTML = '<div class="d-flex"><div class="toast-body fs-6">' + esc(text) +
+    '</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>';
+  $('toasts').appendChild(el);
+  const t = new bootstrap.Toast(el, { delay: art === 'danger' ? 8000 : 3500 });
+  el.addEventListener('hidden.bs.toast', () => el.remove());
+  t.show();
+}
+function fehler(msg) { toast((msg && msg.message) || msg, 'danger'); }
+
+function stepper(id, wert, min, max) {
+  wert = wert === undefined ? 1 : wert; min = min === undefined ? 1 : min;
+  return '<div class="stepper">' +
+    '<button type="button" class="btn btn-outline-secondary" onclick="schritt(\'' + id + '\',-1)">−</button>' +
+    '<input id="' + id + '" type="number" class="form-control" value="' + wert + '" min="' + min + '"' +
+    (max !== undefined ? ' max="' + max + '"' : '') + ' inputmode="numeric">' +
+    '<button type="button" class="btn btn-outline-secondary" onclick="schritt(\'' + id + '\',1)">+</button></div>';
+}
+function schritt(id, d) {
+  const i = $(id);
+  let v = (parseInt(i.value, 10) || 0) + d;
+  const min = i.min !== '' ? parseInt(i.min, 10) : 0;
+  const max = i.max !== '' ? parseInt(i.max, 10) : Infinity;
+  i.value = Math.max(min, Math.min(max, v));
+  i.dispatchEvent(new Event('change'));
+}
+
+function kategorien() {
+  const k = [];
+  S.katalog.forEach(a => { if (a.aktiv && k.indexOf(a.kategorie) < 0) k.push(a.kategorie); });
+  return k;
+}
+
+function katalogOptionen() {
+  let h = '<option value="">– Artikel wählen –</option>';
+  kategorien().forEach(k => {
+    h += '<optgroup label="' + esc(k) + '">';
+    S.katalog.forEach((a, i) => { if (a.aktiv && a.kategorie === k) h += '<option value="' + i + '">' + esc(a.artikel) + '</option>'; });
+    h += '</optgroup>';
+  });
+  return h;
+}
+
+function katalogHinweis(selectId, zielId) {
+  const a = S.katalog[$(selectId).value];
+  $(zielId).textContent = a && a.hinweis ? 'Hinweis: ' + a.hinweis : '';
+}
+
+function zeigeTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.style.display = 'none');
+  $('tab-' + name).style.display = '';
+  document.querySelectorAll('[data-tab]').forEach(a => a.classList.toggle('active', a.dataset.tab === name));
+  window.scrollTo(0, 0);
+}
+
+function alleRendern() {
+  personPicker('ausPerson', 'aus', true);
+  personPicker('rueckPerson', 'rue', true, rueckPersonGewaehlt);
+  personPicker('persPerson', 'pers', false, personLaden);
+  $('ausLieferant').innerHTML = S.lieferanten.map(l => '<option>' + esc(l.name) + '</option>').join('');
+  lieferantInfo();
+  katalogGeaendert();
+  $('lagerKat').innerHTML = '<option value="">Alle Kategorien</option>' + kategorien().map(k => '<option>' + esc(k) + '</option>').join('');
+  lagerGeaendert();
+  korbRendern();
+  rueckRendern();
+}
+
+function lagerGeaendert() {
+  lagerAuswahlRendern();
+  lagerRendern();
+  const knapp = S.lager.filter(a => a.mindest > 0 && a.bestand <= a.mindest).length;
+  const b = $('knappBadge');
+  b.style.display = knapp ? '' : 'none';
+  b.textContent = knapp;
+}
+
+/* ============================================================
+ *  PERSONENAUSWAHL (wird in 3 Reitern genutzt)
+ * ============================================================ */
+function personPicker(containerId, prefix, mitManuell, onChange) {
+  // Kameraden kommen vom Server bereits nach Nachname sortiert
+  let opts = '<option value="">– Person wählen –</option>';
+  S.kameraden.forEach((k, i) => {
+    const anzeige = k.nachname && k.vorname ? k.nachname + ', ' + k.vorname : (k.nachname || k.vorname);
+    opts += '<option value="' + i + '">' + esc(anzeige) + (k.abteilung ? ' (' + esc(k.abteilung) + ')' : '') + '</option>';
+  });
+  if (mitManuell) opts += '<option value="' + MANUELL + '">✎ Andere Person eingeben …</option>';
+
+  $(containerId).innerHTML =
+    '<label class="form-label">Empfänger / Person</label>' +
+    '<select id="' + prefix + 'Wahl" class="form-select">' + opts + '</select>' +
+    '<div id="' + prefix + 'Mail" class="form-text"></div>' +
+    '<div id="' + prefix + 'Manuell" class="mt-2" style="display:none">' +
+      '<div class="row g-2 mb-2">' +
+        '<div class="col-6"><input id="' + prefix + 'Vorname" class="form-control" placeholder="Vorname"></div>' +
+        '<div class="col-6"><input id="' + prefix + 'Nachname" class="form-control" placeholder="Nachname"></div>' +
+      '</div>' +
+      '<input id="' + prefix + 'Email" type="email" class="form-control" placeholder="E-Mail (optional)">' +
+    '</div>';
+
+  const sel = $(prefix + 'Wahl');
+  sel.addEventListener('change', () => {
+    const man = sel.value === MANUELL;
+    $(prefix + 'Manuell').style.display = man ? '' : 'none';
+    mailHinweis(prefix);
+    const k = S.kameraden[sel.value];
+    if (mitManuell && k && !k.email && !k.tempEmail) emailAbfragen(prefix, sel.value);
+    if (onChange) onChange();
+  });
+  if (mitManuell && onChange) {
+    [prefix + 'Vorname', prefix + 'Nachname', prefix + 'Email'].forEach(id => $(id).addEventListener('change', onChange));
+  }
+}
+
+function lesePerson(prefix) {
+  const v = $(prefix + 'Wahl').value;
+  if (v === MANUELL) {
+    const vorname = $(prefix + 'Vorname').value.trim();
+    const nachname = $(prefix + 'Nachname').value.trim();
+    if (!vorname || !nachname) return null;
+    const name = vorname + ' ' + nachname;
+    return { name: name, email: $(prefix + 'Email').value.trim() };
+  }
+  const k = S.kameraden[v];
+  return k ? { name: k.name, email: k.email || k.tempEmail || '' } : null;
+}
+
+function personZuruecksetzen(prefix) {
+  $(prefix + 'Wahl').value = '';
+  $(prefix + 'Wahl').dispatchEvent(new Event('change'));
+  if ($(prefix + 'Vorname')) { $(prefix + 'Vorname').value = ''; $(prefix + 'Nachname').value = ''; $(prefix + 'Email').value = ''; }
+}
+
+/* ============================================================
+ *  AUSGABE
+ * ============================================================ */
+function modus() { return $('modIntern').checked ? 'intern' : 'extern'; }
+
+function modusWechsel() {
+  const intern = modus() === 'intern';
+  $('blockLieferant').style.display = intern ? 'none' : '';
+  $('addIntern').style.display = intern ? '' : 'none';
+  $('addExtern').style.display = intern ? 'none' : '';
+  korbRendern();
+}
+
+function lieferantInfo() {
+  const l = S.lieferanten.find(x => x.name === $('ausLieferant').value);
+  const box = $('lieferantInfo');
+  box.style.display = l && l.info ? '' : 'none';
+  box.textContent = l ? l.info : '';
+}
+
+function verfuegbar(id) {
+  const a = S.lager.find(x => x.id === id);
+  if (!a) return 0;
+  const imKorb = S.korb.intern.filter(p => p.id === id).reduce((s, p) => s + p.menge, 0);
+  return a.bestand - imKorb;
+}
+
+function lagerAuswahlRendern() {
+  const alt = $('ausLagerArtikel').value;
+  let h = '<option value="">– Artikel wählen –</option>';
+  const kats = [];
+  S.lager.forEach(a => { if (kats.indexOf(a.kategorie) < 0) kats.push(a.kategorie); });
+  kats.forEach(k => {
+    h += '<optgroup label="' + esc(k) + '">';
+    S.lager.filter(a => a.kategorie === k).forEach(a => {
+      const v = verfuegbar(a.id);
+      h += '<option value="' + esc(a.id) + '"' + (v <= 0 ? ' disabled' : '') + '>' +
+        esc(a.artikel) + ' · Gr. ' + esc(a.groesse) + ' (' + (v > 0 ? v + ' verfügbar' : 'nicht vorrätig') + ')</option>';
+    });
+    h += '</optgroup>';
+  });
+  $('ausLagerArtikel').innerHTML = h;
+  if (alt && verfuegbar(alt) > 0) $('ausLagerArtikel').value = alt;
+}
+
+function inWarenkorb() {
+  const menge = parseInt($('ausMenge').value, 10);
+  if (!(menge >= 1)) return fehler('Bitte eine gültige Menge angeben.');
+
+  if (modus() === 'intern') {
+    const id = $('ausLagerArtikel').value;
+    if (!id) return fehler('Bitte einen Artikel aus dem Lager wählen.');
+    const v = verfuegbar(id);
+    if (menge > v) return fehler('Nur noch ' + v + ' Stück verfügbar.');
+    const a = S.lager.find(x => x.id === id);
+    const vorhanden = S.korb.intern.find(p => p.id === id);
+    if (vorhanden) vorhanden.menge += menge;
+    else S.korb.intern.push({ id: id, kategorie: a.kategorie, artikel: a.artikel, groesse: a.groesse, menge: menge });
+    lagerAuswahlRendern();
+    $('ausLagerArtikel').value = '';
+  } else {
+    const a = S.katalog[$('ausKatalogArtikel').value];
+    const gr = $('ausGroesse').value.trim();
+    if (!a) return fehler('Bitte einen Artikel aus dem Katalog wählen.');
+    if (!gr) return fehler('Bitte eine Größe angeben.');
+    S.korb.extern.push({ kategorie: a.kategorie, artikel: a.artikel, groesse: gr, menge: menge });
+    $('ausKatalogArtikel').value = ''; $('ausGroesse').value = ''; $('ausHinweis').textContent = '';
+  }
+  $('ausMenge').value = 1;
+  korbRendern();
+}
+
+function ausKorbEntfernen(i) {
+  S.korb[modus()].splice(i, 1);
+  lagerAuswahlRendern();
+  korbRendern();
+}
+
+function korbRendern() {
+  const korb = S.korb[modus()];
+  $('korbAnzahl').textContent = korb.reduce((s, p) => s + p.menge, 0) + ' Stk.';
+  $('warenkorb').innerHTML = korb.length ? korb.map((p, i) =>
+    '<div class="korb-pos"><div class="titel"><div>' + esc(p.artikel) + '</div><small class="text-muted">Größe ' +
+    esc(p.groesse) + '</small></div><span class="badge bg-dark fs-6">' + p.menge + '×</span>' +
+    '<button class="btn btn-outline-danger btn-sm" style="min-height:40px;width:44px" onclick="ausKorbEntfernen(' + i + ')">✕</button></div>'
+  ).join('') : '<div class="korb-leer">Warenkorb ist leer.</div>';
+  $('btnAusgabe').disabled = !korb.length;
+  $('btnAusgabe').textContent = modus() === 'intern' ? 'Ausgabeschein erstellen & senden' : 'Abholschein erstellen & senden';
+}
+
+function ausgabeAbsenden() {
+  const person = lesePerson('aus');
+  if (!person) return fehler('Bitte einen Empfänger auswählen bzw. Vor- und Nachname eingeben.');
+  const m = modus();
+  const daten = {
+    modus: m,
+    lieferant: m === 'extern' ? $('ausLieferant').value : '',
+    person: person,
+    positionen: S.korb[m],
+    bemerkung: $('ausBemerkung').value.trim()
+  };
+  call('ausgabe', daten, 'Erstelle Beleg und sende E-Mail …').then(res => {
+    S.lager = res.lager;
+    S.korb[m] = [];
+    $('ausBemerkung').value = '';
+    personZuruecksetzen('aus');
+    lagerGeaendert();
+    korbRendern();
+    zeigeErgebnis(res);
+  });
+}
+
+function zeigeErgebnis(res) {
+  $('ergebnisTitel').textContent = '✓ ' + res.typ + ' ' + res.nr;
+  let h = '';
+  if (res.mailGesendet) {
+    h += '<p>' + (res.empfaenger ? 'E-Mail mit PDF wurde an <b>' + esc(res.empfaenger) + '</b> gesendet.'
+                                   : 'Keine E-Mail-Adresse hinterlegt – der Beleg ging an die Datenpflege.') + '</p>';
+  } else {
+    h += '<div class="alert alert-warning">Die E-Mail konnte nicht gesendet werden: ' + esc(res.mailFehler) + '</div>';
+  }
+  if (res.pdfUrl) h += '<a class="btn btn-outline-dark w-100 mb-2" target="_blank" href="' + esc(res.pdfUrl) + '">PDF öffnen</a>';
+  if (res.warnungen && res.warnungen.length) {
+    h += '<div class="alert alert-danger mt-2 mb-0"><b>Mindestbestand erreicht:</b><br>' +
+      res.warnungen.map(w => esc(w.artikel) + ' Gr. ' + esc(w.groesse) + ' – noch ' + w.bestand).join('<br>') +
+      '<br><small>Eine Warn-Mail wurde verschickt.</small></div>';
+  }
+  $('ergebnisBody').innerHTML = h;
+  bootstrap.Modal.getOrCreateInstance($('ergebnisModal')).show();
+}
+
+/* ============================================================
+ *  RÜCKGABE
+ * ============================================================ */
+function rueckPersonGewaehlt() {
+  const p = lesePerson('rue');
+  S.rueck.person = p;
+  S.rueck.besitz = [];
+  S.rueck.extra = [];
+  if (!p) { rueckRendern(); return; }
+  call('person', p, 'Lade Ausrüstung …').then(res => {
+    S.rueck.besitz = res.besitz.map(b => Object.assign({}, b, { rueck: 0, zustand: 'lager' }));
+    rueckRendern();
+  });
+}
+
+function rueckExtra() {
+  if (!S.rueck.person) return fehler('Bitte zuerst eine Person auswählen.');
+  const a = S.katalog[$('rueckKatalog').value];
+  const gr = $('rueckGroesse').value.trim();
+  const menge = parseInt($('rueckMenge').value, 10);
+  if (!a) return fehler('Bitte einen Artikel wählen.');
+  if (!gr) return fehler('Bitte eine Größe angeben.');
+  if (!(menge >= 1)) return fehler('Bitte eine gültige Menge angeben.');
+  S.rueck.extra.push({ kategorie: a.kategorie, artikel: a.artikel, groesse: gr, menge: menge, zustand: $('rueckZustandNeu').value });
+  $('rueckKatalog').value = ''; $('rueckGroesse').value = ''; $('rueckMenge').value = 1;
+  rueckRendern();
+}
+
+function rueckRendern() {
+  const r = S.rueck;
+  if (!r.person) {
+    $('rueckListe').innerHTML = '<div class="korb-leer">Bitte zuerst eine Person auswählen.</div>';
+    $('btnRueckgabe').disabled = true;
+    return;
+  }
+  let h = '';
+  if (r.besitz.length) {
+    h += '<p class="text-muted mb-1">Laut App im Besitz von ' + esc(r.person.name) + ' – Menge der Rückgabe einstellen:</p>';
+    r.besitz.forEach((b, i) => {
+      h += '<div class="korb-pos flex-wrap"><div class="titel"><div>' + esc(b.artikel) + '</div><small class="text-muted">Gr. ' +
+        esc(b.groesse) + ' · ausgegeben: ' + b.menge + '</small></div>' +
+        stepper('rb' + i, b.rueck, 0, b.menge) +
+        '<select class="form-select" style="width:auto" onchange="S.rueck.besitz[' + i + '].zustand=this.value">' +
+        '<option value="lager"' + (b.zustand === 'lager' ? ' selected' : '') + '>ins Lager</option>' +
+        '<option value="aussondern"' + (b.zustand === 'aussondern' ? ' selected' : '') + '>aussondern</option></select></div>';
+    });
+  } else {
+    h += '<div class="korb-leer pb-2">Für diese Person ist keine ausgegebene Ausrüstung erfasst.<br>Artikel über „Weiteren Artikel zurücknehmen“ hinzufügen.</div>';
+  }
+  if (r.extra.length) {
+    h += '<p class="text-muted mt-3 mb-1">Weitere Artikel:</p>';
+    r.extra.forEach((e, i) => {
+      h += '<div class="korb-pos"><div class="titel"><div>' + esc(e.artikel) + '</div><small class="text-muted">Gr. ' + esc(e.groesse) +
+        ' · ' + (e.zustand === 'aussondern' ? 'aussondern' : 'ins Lager') + '</small></div><span class="badge bg-dark fs-6">' + e.menge +
+        '×</span><button class="btn btn-outline-danger btn-sm" style="min-height:40px;width:44px" onclick="S.rueck.extra.splice(' + i + ',1);rueckRendern()">✕</button></div>';
+    });
+  }
+  $('rueckListe').innerHTML = h;
+  r.besitz.forEach((b, i) => $('rb' + i).addEventListener('change', ev => {
+    b.rueck = Math.max(0, Math.min(b.menge, parseInt(ev.target.value, 10) || 0));
+    ev.target.value = b.rueck;
+    rueckButton();
+  }));
+  rueckButton();
+}
+
+function rueckPositionen() {
+  return S.rueck.besitz.filter(b => b.rueck > 0)
+    .map(b => ({ kategorie: b.kategorie, artikel: b.artikel, groesse: b.groesse, menge: b.rueck, zustand: b.zustand }))
+    .concat(S.rueck.extra);
+}
+
+function rueckButton() {
+  const n = rueckPositionen().reduce((s, p) => s + p.menge, 0);
+  $('btnRueckgabe').disabled = n === 0;
+  $('btnRueckgabe').textContent = n ? 'Rückgabe buchen & Beleg senden (' + n + ' Stk.)' : 'Rückgabe buchen & Beleg senden';
+}
+
+function rueckgabeAbsenden() {
+  const daten = { person: lesePerson('rue') || S.rueck.person, positionen: rueckPositionen(), bemerkung: $('rueckBemerkung').value.trim() };
+  call('rueckgabe', daten, 'Buche Rückgabe …').then(res => {
+    S.lager = res.lager;
+    S.rueck = { person: null, besitz: [], extra: [] };
+    $('rueckBemerkung').value = '';
+    personZuruecksetzen('rue');
+    lagerGeaendert();
+    rueckRendern();
+    zeigeErgebnis(res);
+  });
+}
+
+/* ============================================================
+ *  EINBUCHEN
+ * ============================================================ */
+function einArtikelFuellen() {
+  const k = $('einKat').value;
+  let h = '<option value="">– Artikel wählen –</option>';
+  S.katalog.forEach((a, i) => { if (a.aktiv && a.kategorie === k) h += '<option value="' + i + '">' + esc(a.artikel) + '</option>'; });
+  $('einArtikel').innerHTML = h;
+  $('einHinweis').textContent = '';
+  einGroessenFuellen();
+}
+
+function einGroessenFuellen() {
+  const a = S.katalog[$('einArtikel').value];
+  const gr = a ? S.lager.filter(l => l.kategorie === a.kategorie && l.artikel === a.artikel).map(l => l.groesse) : [];
+  $('einGroessenListe').innerHTML = gr.map(g => '<option value="' + esc(g) + '">').join('');
+  einStatus();
+}
+
+function einTreffer() {
+  const a = S.katalog[$('einArtikel').value];
+  const gr = $('einGroesse').value.trim().toLowerCase();
+  if (!a || !gr) return null;
+  return S.lager.find(l => l.kategorie === a.kategorie && l.artikel === a.artikel && l.groesse.toLowerCase() === gr) || false;
+}
+
+function einStatus() {
+  const t = einTreffer();
+  $('einStatus').textContent = t ? 'Vorhanden: ' + t.bestand + ' Stück (' + t.id + ')' : (t === false ? 'Neuer Artikel – wird angelegt.' : '');
+  $('einMindestBlock').style.visibility = t ? 'hidden' : 'visible';
+  $('einMindest').placeholder = S.standardMindest;
+}
+
+function einbuchenAbsenden() {
+  const a = S.katalog[$('einArtikel').value];
+  if (!a) return fehler('Bitte einen Artikel wählen.');
+  const daten = {
+    kategorie: a.kategorie, artikel: a.artikel,
+    groesse: $('einGroesse').value.trim(),
+    menge: $('einMenge').value,
+    mindest: $('einMindest').value
+  };
+  call('einbuchen', daten, 'Buche ein …').then(res => {
+    S.lager = res.lager;
+    S.einProtokoll.unshift(daten.menge + '× ' + daten.artikel + ' · Gr. ' + daten.groesse);
+    $('einProtokoll').innerHTML = S.einProtokoll.map(t => '<div class="korb-pos"><div class="titel">' + esc(t) + '</div><span class="text-success">✓</span></div>').join('');
+    $('einGroesse').value = ''; $('einMenge').value = 1; $('einMindest').value = '';
+    lagerGeaendert();
+    einGroessenFuellen();
+    toast('Eingebucht: ' + daten.menge + '× ' + daten.artikel + ' Gr. ' + daten.groesse);
+    $('einGroesse').focus();
+  });
+}
+
+/* ============================================================
+ *  LAGER
+ * ============================================================ */
+function lagerRendern() {
+  const q = $('lagerSuche').value.trim().toLowerCase();
+  const kat = $('lagerKat').value;
+  const nurKnapp = $('lagerNurKnapp').checked;
+  const liste = S.lager.filter(a =>
+    (!kat || a.kategorie === kat) &&
+    (!nurKnapp || (a.mindest > 0 && a.bestand <= a.mindest)) &&
+    (!q || (a.id + ' ' + a.artikel + ' ' + a.groesse + ' ' + a.kategorie).toLowerCase().indexOf(q) >= 0));
+
+  $('lagerBody').innerHTML = liste.length ? liste.map(a => {
+    const cls = a.bestand <= 0 ? 'leer' : (a.mindest > 0 && a.bestand <= a.mindest ? 'knapp' : '');
+    return '<tr class="klickbar ' + cls + '" onclick="korrekturOeffnen(\'' + esc(a.id) + '\')"><td><code>' + esc(a.id) + '</code></td><td>' +
+      esc(a.kategorie) + '</td><td>' + esc(a.artikel) + '</td><td>' + esc(a.groesse) + '</td><td class="text-end fw-bold">' +
+      a.bestand + '</td><td class="text-end text-muted">' + a.mindest + '</td></tr>';
+  }).join('') : '<tr><td colspan="6" class="text-center py-4 text-muted">Keine Artikel gefunden.</td></tr>';
+
+  const stueck = S.lager.reduce((s, a) => s + a.bestand, 0);
+  const knapp = S.lager.filter(a => a.mindest > 0 && a.bestand <= a.mindest).length;
+  const leer = S.lager.filter(a => a.bestand <= 0).length;
+  $('kennzahlen').innerHTML = [
+    ['Artikel/Größen', S.lager.length], ['Teile gesamt', stueck], ['Knapp', knapp], ['Leer', leer]
+  ].map(k => '<div class="col-6 col-md-3"><div class="kennzahl"><b>' + k[1] + '</b><span class="text-muted">' + k[0] + '</span></div></div>').join('');
+}
+
+function korrekturOeffnen(id) {
+  const a = S.lager.find(x => x.id === id);
+  if (!a) return;
+  $('korrTitel').textContent = a.artikel + ' · Gr. ' + a.groesse;
+  $('korrId').value = a.id;
+  $('korrBestand').value = a.bestand;
+  $('korrMindest').value = a.mindest;
+  bootstrap.Modal.getOrCreateInstance($('korrModal')).show();
+}
+
+function korrekturAbsenden(ev) {
+  ev.preventDefault();
+  const daten = { id: $('korrId').value, bestand: $('korrBestand').value, mindest: $('korrMindest').value, grund: $('korrGrund').value };
+  call('korrektur', daten, 'Speichere …').then(res => {
+    bootstrap.Modal.getOrCreateInstance($('korrModal')).hide();
+    S.lager = res.lager;
+    lagerGeaendert();
+    toast('Gespeichert.');
+  });
+}
+
+/* ============================================================
+ *  PERSONEN
+ * ============================================================ */
+function personLaden() {
+  const p = lesePerson('pers');
+  if (!p) { $('persErgebnis').innerHTML = ''; return; }
+  call('person', p, 'Lade Übersicht …').then(res => {
+    let h = '<div class="row"><div class="col-lg-5"><div class="card"><div class="card-header">Aktuell im Besitz</div><div class="card-body p-0">';
+    h += res.besitz.length
+      ? '<table class="table m-0"><thead><tr><th>Artikel</th><th>Größe</th><th class="text-end">Menge</th></tr></thead><tbody>' +
+        res.besitz.map(b => '<tr><td>' + esc(b.artikel) + '</td><td>' + esc(b.groesse) + '</td><td class="text-end fw-bold">' + b.menge + '</td></tr>').join('') +
+        '</tbody></table>'
+      : '<div class="korb-leer">Keine Ausrüstung erfasst.</div>';
+    h += '</div></div></div><div class="col-lg-7"><div class="card"><div class="card-header">Verlauf</div><div class="card-body p-0 tabelle-wrap">';
+    h += res.verlauf.length
+      ? '<table class="table m-0"><thead><tr><th>Datum</th><th>Vorgang</th><th>Artikel</th><th class="text-end">Menge</th><th></th></tr></thead><tbody>' +
+        res.verlauf.map(v => {
+          const farbe = v.typ === 'Rückgabe' ? 'success' : (v.typ === 'Abholschein' ? 'danger' : 'dark');
+          return '<tr><td class="text-nowrap">' + esc(v.datum) + '</td><td><span class="badge bg-' + farbe + '">' + esc(v.typ) +
+            '</span><br><small class="text-muted">' + esc(v.nr) + '</small></td><td>' + esc(v.artikel) + ' · Gr. ' + esc(v.groesse) +
+            (v.info ? '<br><small class="text-muted">' + esc(v.info) + '</small>' : '') + '</td><td class="text-end">' + v.menge +
+            '</td><td>' + (v.pdf ? '<a class="btn btn-sm btn-outline-dark" style="min-height:36px" target="_blank" href="' + esc(v.pdf) + '">PDF</a>' : '') + '</td></tr>';
+        }).join('') + '</tbody></table>'
+      : '<div class="korb-leer">Noch keine Vorgänge.</div>';
+    h += '</div></div></div></div>';
+    $('persErgebnis').innerHTML = h;
+  });
+}
+
+/* ============================================================
+ *  E-MAIL NACHTRAGEN
+ * ============================================================ */
+let mailZiel = null;
+
+function mailHinweis(prefix) {
+  const sel = $(prefix + 'Wahl');
+  const k = S.kameraden[sel.value];
+  const el = $(prefix + 'Mail');
+  if (!k) { el.innerHTML = ''; return; }
+  if (k.email) { el.textContent = '✉ ' + k.email; return; }
+  if (k.tempEmail) {
+    el.innerHTML = '✉ ' + esc(k.tempEmail) + ' <span class="text-muted">(nur für diese Sitzung)</span>';
+    return;
+  }
+  el.innerHTML = '<span class="text-danger">Keine E-Mail hinterlegt – Beleg geht nur an die Datenpflege.</span> ' +
+    (prefix === 'pers' ? '' : '<a href="#" onclick="emailAbfragen(\'' + prefix + '\',' + sel.value + ');return false">E-Mail eintragen</a>');
+}
+
+function emailAbfragen(prefix, idx) {
+  const k = S.kameraden[idx];
+  if (!k) return;
+  mailZiel = { prefix: prefix, idx: Number(idx) };
+  $('mailPersonName').textContent = k.name;
+  $('mailInput').value = '';
+  $('mailSpeichern').checked = true;
+  const m = bootstrap.Modal.getOrCreateInstance($('mailModal'));
+  m.show();
+  $('mailModal').addEventListener('shown.bs.modal', () => $('mailInput').focus(), { once: true });
+}
+
+function mailOhne() {
+  bootstrap.Modal.getOrCreateInstance($('mailModal')).hide();
+  mailZiel = null;
+}
+
+function mailUebernehmen(ev) {
+  ev.preventDefault();
+  if (!mailZiel) return;
+  const email = $('mailInput').value.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fehler('Bitte eine gültige E-Mail-Adresse eingeben.');
+  const ziel = mailZiel;
+  const k = S.kameraden[ziel.idx];
+  const fertig = () => {
+    bootstrap.Modal.getOrCreateInstance($('mailModal')).hide();
+    mailZiel = null;
+    ['aus', 'rue', 'pers'].forEach(p => { if ($(p + 'Wahl') && $(p + 'Wahl').value === String(ziel.idx)) mailHinweis(p); });
+  };
+  if ($('mailSpeichern').checked) {
+    call('kameradEmail', { vorname: k.vorname, nachname: k.nachname, email: email }, 'Speichere E-Mail …').then(() => {
+      k.email = email;
+      delete k.tempEmail;
+      fertig();
+      toast('E-Mail für ' + k.name + ' gespeichert.');
+    });
+  } else {
+    k.tempEmail = email;
+    fertig();
+  }
+}
+
+/* ============================================================
+ *  KATALOG PFLEGEN
+ * ============================================================ */
+const NEUE_KAT = '__neu';
+
+function alleKategorien() {
+  const k = [];
+  S.katalog.forEach(a => { if (k.indexOf(a.kategorie) < 0) k.push(a.kategorie); });
+  return k;
+}
+
+function katalogGeaendert() {
+  $('ausKatalogArtikel').innerHTML = katalogOptionen();
+  $('rueckKatalog').innerHTML = katalogOptionen();
+  const altKat = $('einKat').value;
+  $('einKat').innerHTML = kategorien().map(k => '<option>' + esc(k) + '</option>').join('');
+  if (altKat && kategorien().indexOf(altKat) >= 0) $('einKat').value = altKat;
+  einArtikelFuellen();
+  const altKatKat = $('katKat').value;
+  $('katKat').innerHTML = alleKategorien().map(k => '<option>' + esc(k) + '</option>').join('') +
+    '<option value="' + NEUE_KAT + '">+ Neue Kategorie …</option>';
+  if (altKatKat && altKatKat !== NEUE_KAT && alleKategorien().indexOf(altKatKat) >= 0) $('katKat').value = altKatKat;
+  katNeueKategorie();
+  katalogRendern();
+}
+
+function katNeueKategorie() {
+  $('katKatNeu').style.display = $('katKat').value === NEUE_KAT ? '' : 'none';
+}
+
+function katalogRendern() {
+  const q = $('katSuche').value.trim().toLowerCase();
+  const liste = S.katalog
+    .map((a, i) => Object.assign({ i: i }, a))
+    .filter(a => !q || (a.kategorie + ' ' + a.artikel + ' ' + a.hinweis).toLowerCase().indexOf(q) >= 0)
+    .sort((a, b) => a.kategorie.localeCompare(b.kategorie, 'de') || a.artikel.localeCompare(b.artikel, 'de'));
+  $('katBody').innerHTML = liste.length ? liste.map(a =>
+    '<tr' + (a.aktiv ? '' : ' class="text-muted"') + '><td>' + esc(a.kategorie) + '</td><td>' +
+    (a.aktiv ? esc(a.artikel) : '<s>' + esc(a.artikel) + '</s>') +
+    (a.hinweis ? '<br><small class="text-muted">' + esc(a.hinweis) + '</small>' : '') + '</td>' +
+    '<td class="text-end"><div class="form-check form-switch d-inline-block m-0">' +
+    '<input class="form-check-input" type="checkbox" style="width:3em;height:1.6em" ' + (a.aktiv ? 'checked' : '') +
+    ' onchange="katalogAktivSetzen(' + a.i + ', this.checked)"></div></td></tr>'
+  ).join('') : '<tr><td colspan="3" class="text-center py-4 text-muted">Nichts gefunden.</td></tr>';
+}
+
+function katalogNeuAbsenden() {
+  const kat = $('katKat').value === NEUE_KAT ? $('katKatNeu').value.trim() : $('katKat').value;
+  const artikel = $('katArtikel').value.trim();
+  if (!kat) return fehler('Bitte eine Kategorie angeben.');
+  if (!artikel) return fehler('Bitte eine Artikelbezeichnung angeben.');
+  call('katalogNeu', { kategorie: kat, artikel: artikel, hinweis: $('katHinweis').value.trim() }, 'Speichere Katalog …').then(res => {
+    S.katalog = res.katalog;
+    $('katArtikel').value = ''; $('katHinweis').value = ''; $('katKatNeu').value = '';
+    katalogGeaendert();
+    $('katKat').value = kat; katNeueKategorie();
+    toast('„' + artikel + '“ in den Katalog aufgenommen.');
+  });
+}
+
+function katalogAktivSetzen(i, aktiv) {
+  const a = S.katalog[i];
+  call('katalogAktiv', { kategorie: a.kategorie, artikel: a.artikel, aktiv: aktiv }, 'Speichere …').then(res => {
+    S.katalog = res.katalog;
+    katalogGeaendert();
+    toast(a.artikel + (aktiv ? ' aktiviert.' : ' deaktiviert.'));
+  }).catch(() => katalogRendern());
+}
+</script>
+</body>
+</html>
